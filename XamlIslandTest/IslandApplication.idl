@@ -1,0 +1,17 @@
+namespace XamlIslandTest
+{
+	interface IXamlMetadataContainer
+	{
+		Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Markup.IXamlMetadataProvider> MetadataProviders { get; };
+	};
+	[default_interface]
+	runtimeclass IslandApplication : Windows.UI.Xaml.Application, IXamlMetadataContainer, Windows.Foundation.IClosable
+	{
+		IslandApplication(Windows.Foundation.Collections.IVector<Windows.UI.Xaml.Markup.IXamlMetadataProvider> providers);
+		protected IslandApplication();
+		protected void Initialize();
+
+		Windows.Foundation.IClosable WindowsXamlManager{ get; };
+		Boolean IsDisposed{ get; };
+	};
+}

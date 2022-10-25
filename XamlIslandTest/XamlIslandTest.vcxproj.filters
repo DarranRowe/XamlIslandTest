@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="packages.config" />
+    <None Include="button.xaml">
+      <Filter>Resources</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="settings.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="IslandApplication.cpp">
+      <Filter>IslandApplication</Filter>
+    </ClCompile>
+    <ClCompile Include="appdd.cpp" />
+    <ClCompile Include="main_application.cpp">
+      <Filter>main_application</Filter>
+    </ClCompile>
+    <ClCompile Include="window_base.cpp">
+      <Filter>window_base</Filter>
+    </ClCompile>
+    <ClCompile Include="main_window.cpp">
+      <Filter>main_window</Filter>
+    </ClCompile>
+    <ClCompile Include="application_base.cpp">
+      <Filter>application_base</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="IslandApplication.h">
+      <Filter>IslandApplication</Filter>
+    </ClInclude>
+    <ClInclude Include="appdd.h" />
+    <ClInclude Include="main_application.h">
+      <Filter>main_application</Filter>
+    </ClInclude>
+    <ClInclude Include="window_base.h">
+      <Filter>window_base</Filter>
+    </ClInclude>
+    <ClInclude Include="main_window.h">
+      <Filter>main_window</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="window_t.h">
+      <Filter>window_base</Filter>
+    </ClInclude>
+    <ClInclude Include="application_base.h">
+      <Filter>application_base</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="IslandApplication">
+      <UniqueIdentifier>{d7a8ff98-9c29-47d0-aae4-2c459024f455}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main_application">
+      <UniqueIdentifier>{3c0ed04b-47a9-446e-beaf-e0bdd4a86611}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="window_base">
+      <UniqueIdentifier>{b97fbe5a-a52c-4ce5-8ddb-ba56771a201b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="main_window">
+      <UniqueIdentifier>{26d18404-0166-4be3-ab0c-528547ab449b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{0c0c436f-4d48-41db-ac56-657aeb3bb765}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="application_base">
+      <UniqueIdentifier>{73a6da3d-215f-4333-b90b-16d8675c4d69}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="IslandApplication.idl">
+      <Filter>IslandApplication</Filter>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="XamlIslandTest.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
