@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef _MEMORY_
+#include <memory>
+#endif
+
 //The singleton portion of the application class.
 //Used to store the instance of the application_base object
 //and control the lifetime of the object.

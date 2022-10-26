@@ -4,6 +4,7 @@
 #include <windows.ui.xaml.hosting.desktopwindowxamlsource.h>
 
 namespace wf = winrt::Windows::Foundation;
+namespace wfc = winrt::Windows::Foundation::Collections;
 namespace wux = winrt::Windows::UI::Xaml;
 namespace wuxm = winrt::Windows::UI::Xaml::Markup;
 namespace wuxh = winrt::Windows::UI::Xaml::Hosting;
@@ -31,7 +32,7 @@ main_application &main_application::get_application()
 main_application::~main_application()
 {
 	//make sure the message queue/dispatcher queue is empty
-	//if this is not done, there may be a crash on process exit
+	//if this is not done, there may be a crash on process exit.
 	drain_message_queue();
 	if (m_islandapp)
 	{
@@ -49,7 +50,7 @@ void main_application::initialise_xaml_host(std::vector<wuxm::IXamlMetadataProvi
 		providers.push_back(prov.as<wuxm::IXamlMetadataProvider>());
 	}
 
-	winrt::Windows::Foundation::Collections::IVector<wuxm::IXamlMetadataProvider> provs = winrt::multi_threaded_vector<wuxm::IXamlMetadataProvider>(std::move(providers));
+	wfc::IVector<wuxm::IXamlMetadataProvider> provs = winrt::multi_threaded_vector<wuxm::IXamlMetadataProvider>(std::move(providers));
 	m_islandapp = winrt::XamlIslandTest::IslandApplication(provs);
 }
 

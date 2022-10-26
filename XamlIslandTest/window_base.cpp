@@ -113,7 +113,7 @@ wuxh::DesktopWindowXamlSource window_base::get_next_focused_island(const MSG *ms
 		auto reason = get_reason_from_key(key);
 		if (reason != invalid_reason)
 		{
-			//This figures the direction of navigation.
+			//This works out the direction of navigation.
 			//First, Down and Right moves forward in the control order.
 			//Last, Left and Up moves backward in the control order.
 			const bool previous = ((reason == wuxh::XamlSourceFocusNavigationReason::First) || (reason == wuxh::XamlSourceFocusNavigationReason::Down) || (reason == wuxh::XamlSourceFocusNavigationReason::Right)) ? false : true;
@@ -185,17 +185,17 @@ bool window_base::navigate_focus(MSG *msg)
 		m_last_focus_request_id = request.CorrelationId();
 		//Attempt to navigate focus.
 		const auto result = next_focused_island.NavigateFocus(request);
-		auto fm = result.WasFocusMoved();
+		const auto focus_moved = result.WasFocusMoved();
 		//I do not know if it is a bug, but NavigateFocus doesn't move the keyboard focus
 		//for the associated HWND.
 		//If WasFocusMoved indicates that the focus was moved, call SetFocus on the HWND itself
 		//to move the keyboard focus.
 		//Without this, the xaml content doesn't receive keyboard focus when pressing tab.
-		if (fm)
+		if (focus_moved)
 		{
 			SetFocus(island_window);
 		}
-		return fm;
+		return focus_moved;
 	}
 	else
 	{
@@ -347,7 +347,7 @@ HWND window_base::get_handle(wuxh::DesktopWindowXamlSource const &source)
 
 //Helper function that obtains the window handle from the xaml source, it also
 //attaches the xaml source to a parent window.
-HWND window_base::get_handle_and_attach(winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource const &source, HWND attach_to)
+HWND window_base::get_handle_and_attach(wuxh::DesktopWindowXamlSource const &source, HWND attach_to)
 {
 	HWND island_handle{};
 	auto interop = source.as<IDesktopWindowXamlSourceNative>();

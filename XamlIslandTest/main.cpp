@@ -33,13 +33,25 @@ struct dd_init
 com_init g_apartment_init;
 dd_init g_dynamic_dependency_init;
 
-namespace xit = winrt::XamlIslandTest;
-namespace wf = winrt::Windows::Foundation;
-namespace wux = winrt::Windows::UI::Xaml;
-namespace wuxc = winrt::Windows::UI::Xaml::Controls;
-namespace wuxh = winrt::Windows::UI::Xaml::Hosting;
-namespace wuxm = winrt::Windows::UI::Xaml::Markup;
-namespace mux = winrt::Microsoft::UI::Xaml;
+namespace muxx = winrt::Microsoft::UI::Xaml::XamlTypeInfo;
+namespace muxc = winrt::Microsoft::UI::Xaml::Controls;
+
+void except_filter()
+{
+	try
+	{
+		throw;
+	}
+	catch (winrt::hresult_error &)
+	{
+	}
+	catch (wil::ResultException &)
+	{
+	}
+	catch (std::exception &)
+	{
+	}
+}
 
 int application_main(HINSTANCE inst, LPWSTR, int cmdshow)
 {
@@ -48,14 +60,14 @@ int application_main(HINSTANCE inst, LPWSTR, int cmdshow)
 	//when we destroy it. We don't want any dangling references.
 	{
 		//Load the WinUI metadata provider.
-		mux::XamlTypeInfo::XamlControlsXamlMetaDataProvider md;
+		muxx::XamlControlsXamlMetaDataProvider md;
 		//Obtains the application.
 		main_application &main_app = main_application::get_application();
 		//Initialise the application.
 		//This passes the metadata provider through to the Xaml application.
 		main_app.initialise_xaml_host({ md });
 		//Loads the WinUI control resources.
-		mux::Controls::XamlControlsResources res;
+		muxc::XamlControlsResources res;
 		//Merge the resources into the xaml merged dictionaries.
 		main_app.merge_resources({ res });
 
@@ -84,7 +96,7 @@ int WINAPI wWinMain(_In_ HINSTANCE inst, _In_opt_ HINSTANCE, _In_ LPWSTR cmdline
 	}
 	catch (...)
 	{
-
+		except_filter();
 	}
 	return ret_val;
 }

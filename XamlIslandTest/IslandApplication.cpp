@@ -4,7 +4,6 @@
 
 namespace wf = winrt::Windows::Foundation;
 namespace wfc = winrt::Windows::Foundation::Collections;
-namespace ws = winrt::Windows::System;
 namespace wuxh = winrt::Windows::UI::Xaml::Hosting;
 namespace wuxi = winrt::Windows::UI::Xaml::Interop;
 namespace wuxm = winrt::Windows::UI::Xaml::Markup;

@@ -93,7 +93,7 @@ protected:
 	//The window procedure registered for the window handle.
 	static LRESULT CALLBACK window_proc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 	{
-		//The message handler for messages not WM_NCCREATE
+		//The message handler for messages not WM_NCCREATE.
 		if (msg != WM_NCCREATE)
 		{
 			//Obtains the window pointer from the window handle.

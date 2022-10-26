@@ -110,7 +110,7 @@ bool main_window::on_create(const CREATESTRUCTW &)
 	//Shows the xaml content window.
 	ShowWindow(m_xaml_button_handle, SW_SHOW);
 
-	//Creates another Windows API.
+	//Creates another Windows API button.
 	//This button is also used to illustrate the control navigation.
 	m_native_button2.reset(CreateWindowExW(0, L"Button", L"Test Button 2", WS_TABSTOP | WS_CHILD | BS_PUSHBUTTON | BS_NOTIFY | WS_VISIBLE, 0, 0, 150, 50, get_handle(), reinterpret_cast<HMENU>(102), m_instance, nullptr));
 
@@ -123,6 +123,9 @@ void main_window::on_destroy()
 	m_xaml_button_click_revoker.revoke();
 	m_xaml_button = nullptr;
 	m_xaml_button_handle = nullptr;
+	//Explicitly call the base on_destroy.
+	//This allows us to continue to perform the base class' handling of this
+	//event, which in this case posts the WM_QUIT message.
 	my_base::on_destroy();
 }
 void main_window::on_size(UINT, int, int)

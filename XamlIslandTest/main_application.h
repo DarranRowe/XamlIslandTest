@@ -5,7 +5,9 @@
 #include <Windows.h>
 #endif
 
+#ifndef _VECTOR_
 #include <vector>
+#endif
 #ifndef WINRT_Windows_Foundation_H
 #include <winrt/Windows.Foundation.h>
 #endif
@@ -63,7 +65,6 @@ private:
 	void get_xaml_sources();
 	//Does the message filtering for the xaml source.
 	bool filter_message(const MSG &);
-	void clear_sources();
 
 	winrt::XamlIslandTest::IslandApplication m_islandapp = nullptr;
 	std::vector<window_base *> m_windows{};
