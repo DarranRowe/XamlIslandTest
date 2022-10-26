@@ -298,6 +298,7 @@ HWND window_base::create_desktop_window_xaml_source(DWORD extra_styles, const wu
 	wuxh::DesktopWindowXamlSource desktop_source;
 	//Obtains the handle for the source and attaches this source to the main window.
 	HWND xaml_source_handle = get_handle_and_attach(desktop_source, get_handle());
+	_ASSERTE(xaml_source_handle != nullptr);
 	//Add the style provided by the caller.
 	//To do this, we get the styles from the xaml source handle, bitwise ors the provided styles
 	//and then sets it on the xaml source handle.
@@ -351,8 +352,11 @@ HWND window_base::get_handle_and_attach(winrt::Windows::UI::Xaml::Hosting::Deskt
 	HWND island_handle{};
 	auto interop = source.as<IDesktopWindowXamlSourceNative>();
 
-	winrt::check_hresult(interop->get_WindowHandle(&island_handle));
+	//This order matters. If you attempt to get the handle before the source
+	//has been attached to a window, get_WindowHandle will receive a null
+	//handle.
 	winrt::check_hresult(interop->AttachToWindow(attach_to));
+	winrt::check_hresult(interop->get_WindowHandle(&island_handle));
 
 	return island_handle;
 }
