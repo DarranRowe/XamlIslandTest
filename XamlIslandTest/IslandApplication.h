@@ -3,6 +3,7 @@
 
 namespace winrt::XamlIslandTest::implementation
 {
+	//Implementation of the Xaml Application required to load WinUI and other Xaml content.
 	struct IslandApplication : IslandApplicationT<IslandApplication, winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider>
 	{
 		IslandApplication() = default;
@@ -16,6 +17,7 @@ namespace winrt::XamlIslandTest::implementation
 		winrt::Windows::Foundation::Collections::IVector<winrt::Windows::UI::Xaml::Markup::IXamlMetadataProvider> MetadataProviders();
 		void Close();
 
+		//Implementation of the IXamlMetadataProvider interface.
 		winrt::Windows::UI::Xaml::Markup::IXamlType GetXamlType(winrt::Windows::UI::Xaml::Interop::TypeName const &type);
 		winrt::Windows::UI::Xaml::Markup::IXamlType GetXamlType(winrt::hstring const &fullname);
 		winrt::com_array<winrt::Windows::UI::Xaml::Markup::XmlnsDefinition> GetXmlnsDefinitions();

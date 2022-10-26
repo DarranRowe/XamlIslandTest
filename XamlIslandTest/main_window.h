@@ -13,6 +13,7 @@
 
 #include "window_t.h"
 
+//This is the main window class.
 class main_window : public window_t<main_window>
 {
 public:
@@ -20,17 +21,20 @@ public:
 	using my_type = main_window;
 	explicit main_window(HINSTANCE inst);
 
+	//Creates and shows the window.
 	bool create_window(int cmdshow);
 
 protected:
 	friend class my_base;
 	LRESULT handle_message(UINT msg, WPARAM wparam, LPARAM lparam);
 
+	//Various event handlers.
 	bool on_nccreate(const CREATESTRUCTW &);
 	bool on_create(const CREATESTRUCTW &);
 	void on_destroy();
 	void on_size(UINT state, int cx, int cy);
 private:
+	//Helper functions for various functions.
 	void initialise_dpi();
 	bool check_class_registered();
 	void register_window_class();

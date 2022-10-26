@@ -63,6 +63,9 @@ private:
 
 	//Helper function to get a window handle from a DesktopWindowXamlSource object.
 	HWND get_handle(winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource const &);
+	//Helper function to get a window handle from a DesktopWindowXamlSource object.
+	//It attaches the source to a window while it is doing this.
+	HWND get_handle_and_attach(winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource const &, HWND);
 	//Checks cached xaml sources to see if one of them currently has focus.
 	winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource get_focused_island();
 	//Take focus requested event handler. This event fires when when focus changes from a xaml island to a different control.

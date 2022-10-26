@@ -11,6 +11,8 @@ namespace wuxm = winrt::Windows::UI::Xaml::Markup;
 
 namespace winrt::XamlIslandTest::implementation
 {
+	//Constructs with metadata providers.
+	//This stores any provided providers and then initialises the manager.
 	IslandApplication::IslandApplication(wfc::IVector<wuxm::IXamlMetadataProvider> const& providers)
 	{
 		for (auto provider : providers)
@@ -24,6 +26,9 @@ namespace winrt::XamlIslandTest::implementation
 	{
 		Close();
 	}
+	//Returns a reference to the WindowsXamlManager.
+	//Returning the IClosable interface is fine because the only operation you
+	//can perform is to close it.
 	wf::IClosable IslandApplication::WindowsXamlManager() const
 	{
 		return m_xamlmanager;
@@ -34,6 +39,8 @@ namespace winrt::XamlIslandTest::implementation
 	}
 	void IslandApplication::Initialize()
 	{
+		//If this has an outer object, obtain the metadata provider from this so it can participate in out
+		//metadata lookup.
 		const auto out = outer();
 		if constexpr(out)
 		{
@@ -42,12 +49,16 @@ namespace winrt::XamlIslandTest::implementation
 			m_providers.Append(provider);
 		}
 
+		//Initialise the manager.
 		m_xamlmanager = wuxh::WindowsXamlManager::InitializeForCurrentThread();
 	}
+	//Returns the metadata provider collection.
 	wfc::IVector<wuxm::IXamlMetadataProvider> IslandApplication::MetadataProviders()
 	{
 		return m_providers;
 	}
+	//Closes the application.
+	//This destroys the manager and providers and then exits the Xaml application.
 	void IslandApplication::Close()
 	{
 		if (m_isclosed)
@@ -63,6 +74,8 @@ namespace winrt::XamlIslandTest::implementation
 		Exit();
 	}
 
+	//Implements the metadata provider interface.
+	//This just passes any requests through to the contained metadata provider collection.
 	wuxm::IXamlType IslandApplication::GetXamlType(wuxi::TypeName const &type)
 	{
 		for (const auto &provider : m_providers)

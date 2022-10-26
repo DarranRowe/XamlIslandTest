@@ -140,6 +140,8 @@ wuxh::DesktopWindowXamlSource window_base::get_next_focused_island(const MSG *ms
 
 	return nullptr;
 }
+
+//Get the xaml source, if any, that has focus.
 wuxh::DesktopWindowXamlSource window_base::get_focused_island()
 {
 	for (auto &xaml_source : m_xaml_sources)
@@ -152,27 +154,43 @@ wuxh::DesktopWindowXamlSource window_base::get_focused_island()
 
 	return nullptr;
 }
+
+//Moves focus between controls.
 bool window_base::navigate_focus(MSG *msg)
 {
+	//The following is equivalent to:
+	//const auto next_focused_island = get_next_focused_island(msg);
+	//if(next_focused_island)
+	//In otherwords if get_focused_island returns anything besides nullptr, the if case executes,
+	//otherwise the else case executes.
+	//This is important to navigate properly to a xaml island window.
 	if (const auto next_focused_island = get_next_focused_island(msg))
 	{
-		//This assert fires when there is a single window since the next window
-		//is the first window.
-		//_ASSERTE(!next_focused_island.HasFocus());
+		//Gets the previous/currently focused window.
 		const auto previous_focused_window = GetFocus();
+		//Obtains the current window rectangle.
+		//This is used for the hint rectangle.
 		RECT rc_prev{};
 		THROW_IF_WIN32_BOOL_FALSE(GetWindowRect(previous_focused_window, &rc_prev));
 		HWND island_window = get_handle(next_focused_island);
 
+		//Generates the XamlSourceFocusNavigationRequest object.
 		POINT pt = { rc_prev.left, rc_prev.top };
 		SIZE sz = { rc_prev.right - rc_prev.left, rc_prev.bottom - rc_prev.top };
 		ScreenToClient(island_window, &pt);
 		const auto hint_rect = wf::Rect({static_cast<float>(pt.x), static_cast<float>(pt.y), static_cast<float>(sz.cx), static_cast<float>(sz.cy)});
 		const auto reason = get_reason_from_key(msg->wParam);
 		const auto request = wuxh::XamlSourceFocusNavigationRequest(reason, hint_rect);
+		//Store the correlation id for the current request.
 		m_last_focus_request_id = request.CorrelationId();
+		//Attempt to navigate focus.
 		const auto result = next_focused_island.NavigateFocus(request);
 		auto fm = result.WasFocusMoved();
+		//I do not know if it is a bug, but NavigateFocus doesn't move the keyboard focus
+		//for the associated HWND.
+		//If WasFocusMoved indicates that the focus was moved, call SetFocus on the HWND itself
+		//to move the keyboard focus.
+		//Without this, the xaml content doesn't receive keyboard focus when pressing tab.
 		if (fm)
 		{
 			SetFocus(island_window);
@@ -181,21 +199,33 @@ bool window_base::navigate_focus(MSG *msg)
 	}
 	else
 	{
+		//Figures out if an island has keyboard focus.
 		const bool island_is_focused = get_focused_island() != nullptr;
+		//Gets the state of the Alt key.
 		byte keyboard_state[256] = {};
 		THROW_IF_WIN32_BOOL_FALSE(GetKeyboardState(keyboard_state));
 		const bool is_menu_modifier = (keyboard_state[VK_MENU] & 0x80);
+		//If a xaml island has focus then we ignore any message that comes through here
+		//unless the Alt key is being held. This allows us to access Windows API menu bars.
 		if (island_is_focused && !is_menu_modifier)
 		{
 			return false;
 		}
+		//Passes the message through to IsDialogMessage.
+		//If the xaml source isn't handling the message, this function implements
+		//the Windows API dialog keyboard navigation. It handles Tab, Shift+Tab,
+		//Left, Right, Up and Down cursor messages and more.
+		//While the function has Dialog in the name, it is documented to work
+		//on regular windows, not just dialog boxes.
 		const bool is_dialog_message = !!IsDialogMessageW(get_handle(), msg);
+		//The message pump and TakeFocusRequested events need to know if IsDialogMessage
+		//handled the message.
 		return is_dialog_message;
 	}
 }
 
-//The GotFocus event.
-//The message box never shows.
+//This event should fire when you navigate into a xaml source.
+//For some reason it currently doesn't.
 void window_base::on_got_focus(wuxh::DesktopWindowXamlSource const &sender, wuxh::DesktopWindowXamlSourceGotFocusEventArgs const &)
 {
 	MessageBoxW(get_handle(), L"GotFocusEvent", L"GotFocusEvent", MB_OK);
@@ -207,21 +237,28 @@ void window_base::on_got_focus(wuxh::DesktopWindowXamlSource const &sender, wuxh
 	}
 }
 
+//This event fires when you navigate out of a xaml source. I.e, if a xaml source has focus and you press tab.
 void window_base::on_take_focus_requested(wuxh::DesktopWindowXamlSource const & sender, wuxh::DesktopWindowXamlSourceTakeFocusRequestedEventArgs const &args)
 {
 	HWND sender_handle = get_handle(sender);
 
+	//If the correlation id isn't the same as the last one, this means that we are 
+	//navigating to a new window. 
 	if (args.Request().CorrelationId() != m_last_focus_request_id)
 	{
 		const auto reason = args.Request().Reason();
 		const bool previous = ((reason == wuxh::XamlSourceFocusNavigationReason::First) || (reason == wuxh::XamlSourceFocusNavigationReason::Down) || (reason == wuxh::XamlSourceFocusNavigationReason::Right)) ? false : true;
 
+		//Synthesise a MSG to navigate.
 		MSG msg{};
 		msg.hwnd = sender_handle;
 		msg.message = WM_KEYDOWN;
 		msg.wParam = get_key_from_reason(reason);
+		//Try to move focus.
 		if (!navigate_focus(&msg))
 		{
+			//If the navigate focus fails, get the next window with the WS_TABSTOP style
+			//and set the focus on this window.
 			const auto next_element = GetNextDlgTabItem(get_handle(), sender_handle, previous);
 			SetFocus(next_element);
 		}
@@ -240,6 +277,7 @@ bool window_base::focus_navigate(MSG *msg)
 	return navigate_focus(msg);
 }
 
+//Retrieves all of the created xaml sources for this window.
 std::vector<wuxh::DesktopWindowXamlSource> window_base::get_xaml_sources()
 {
 	std::vector<wuxh::DesktopWindowXamlSource> sources;
@@ -251,24 +289,34 @@ std::vector<wuxh::DesktopWindowXamlSource> window_base::get_xaml_sources()
 
 	return sources;
 }
+
+//Creates a DesktopWindowXamlSource out of a xaml UIElement.
+//This function creates the object, hooks up the events, caches the source for later use
+//and returns the handle to the containing window.
 HWND window_base::create_desktop_window_xaml_source(DWORD extra_styles, const wux::UIElement &content)
 {
 	wuxh::DesktopWindowXamlSource desktop_source;
-	auto interop = desktop_source.as<IDesktopWindowXamlSourceNative2>();
-	winrt::check_hresult(interop->AttachToWindow(get_handle()));
-	HWND xaml_source_handle{};
-	winrt::check_hresult(interop->get_WindowHandle(&xaml_source_handle));
+	//Obtains the handle for the source and attaches this source to the main window.
+	HWND xaml_source_handle = get_handle_and_attach(desktop_source, get_handle());
+	//Add the style provided by the caller.
+	//To do this, we get the styles from the xaml source handle, bitwise ors the provided styles
+	//and then sets it on the xaml source handle.
 	const DWORD ex_style = static_cast<DWORD>(GetWindowLongPtrW(xaml_source_handle, GWL_STYLE)) | extra_styles;
 	SetWindowLongPtrW(xaml_source_handle, GWL_STYLE, static_cast<LONG_PTR>(ex_style));
 
+	//Adds the provided content as content for the xaml source.
 	desktop_source.Content(content);
+	//Wires up the TakeFocusRequested event to the xaml source and stores the event token.
 	m_take_focus_event_tokens.emplace(std::make_pair(xaml_source_handle, desktop_source.TakeFocusRequested({ this, &window_base::on_take_focus_requested })));
-	//The GotFocus event is wired up here.
+	//Wires up the GotFocus event to the xaml source and stores the event token.
 	m_got_focus_event_tokens.emplace(std::make_pair(xaml_source_handle, desktop_source.GotFocus({ this, &window_base::on_got_focus })));
+	//Stores the xaml source.
 	m_xaml_sources.push_back(desktop_source);
 
 	return xaml_source_handle;
 }
+
+//Unhooks the events and clears the xaml sources.
 void window_base::clear_xaml_islands()
 {
 	for (auto &xaml_source : m_xaml_sources)
@@ -287,6 +335,7 @@ void window_base::clear_xaml_islands()
 	m_xaml_sources.clear();
 }
 
+//Helper function that just obtains the window handle from the xaml source.
 HWND window_base::get_handle(wuxh::DesktopWindowXamlSource const &source)
 {
 	HWND island_handle{};
@@ -295,6 +344,20 @@ HWND window_base::get_handle(wuxh::DesktopWindowXamlSource const &source)
 	return island_handle;
 }
 
+//Helper function that obtains the window handle from the xaml source, it also
+//attaches the xaml source to a parent window.
+HWND window_base::get_handle_and_attach(winrt::Windows::UI::Xaml::Hosting::DesktopWindowXamlSource const &source, HWND attach_to)
+{
+	HWND island_handle{};
+	auto interop = source.as<IDesktopWindowXamlSourceNative>();
+
+	winrt::check_hresult(interop->get_WindowHandle(&island_handle));
+	winrt::check_hresult(interop->AttachToWindow(attach_to));
+
+	return island_handle;
+}
+
+//Loads a xaml file from a disk file.
 wux::UIElement LoadControlFromFile(std::wstring const &file_name)
 {
 	std::filesystem::path file_path = file_name;
@@ -330,6 +393,9 @@ wux::UIElement LoadControlFromFile(std::wstring const &file_name)
 
 	return wuxm::XamlReader::Load(static_cast<winrt::hstring>(file_content)).as<wux::UIElement>();
 }
+
+//Loads a xaml file from an embedded resource.
+//The resource must be type 255.
 wux::UIElement LoadControlFromResource(uint16_t id)
 {
 	auto resource_handle = FindResourceW(nullptr, MAKEINTRESOURCEW(id), MAKEINTRESOURCEW(xamlresourcetype));

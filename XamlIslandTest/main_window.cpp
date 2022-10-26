@@ -13,6 +13,7 @@ main_window::main_window(HINSTANCE inst) : m_instance(inst)
 {
 }
 
+//Registers a window class and then create a window based on this class.
 bool main_window::create_window(int cmdshow)
 {
 	register_window_class();
@@ -31,12 +32,15 @@ bool main_window::create_window(int cmdshow)
 	return true;
 }
 
+//The most derived message handler.
 LRESULT main_window::handle_message(UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{
 	case WM_NCCREATE:
 	{
+		//If we process WM_NCCREATE, we must still pass this through to
+		//DefWindowProc. Failure to do this results in the window not showing properly.
 		if (!on_nccreate(*reinterpret_cast<CREATESTRUCTW *>(lparam)))
 		{
 			return FALSE;
@@ -64,6 +68,7 @@ LRESULT main_window::handle_message(UINT msg, WPARAM wparam, LPARAM lparam)
 	}
 	default:
 	{
+		//Any message that we don't handle gets passed to the base message handler.
 		return my_base::handle_message(msg, wparam, lparam);
 	}
 	}
@@ -72,14 +77,20 @@ LRESULT main_window::handle_message(UINT msg, WPARAM wparam, LPARAM lparam)
 
 bool main_window::on_nccreate(const CREATESTRUCTW &)
 {
+	//The application is marked as high dpi aware.
+	//Use this to initialise the high dpi information for the window.
 	initialise_dpi();
 
 	return true;
 }
+
 bool main_window::on_create(const CREATESTRUCTW &)
 {
+	//Creates a Windows API button.
+	//This button is to illustrate the control navigation.
 	m_native_button1.reset(CreateWindowExW(0, L"Button", L"Test Button 1", WS_TABSTOP | WS_CHILD | BS_PUSHBUTTON | BS_NOTIFY | WS_VISIBLE, 0, 0, 150, 50, get_handle(), reinterpret_cast<HMENU>(101), m_instance, nullptr));
 
+	//Loads in a xaml control.
 	m_canvas = LoadControlFromResource<wuxc::Canvas>(IDR_XAML_CONTROL);
 	m_xaml_button = m_canvas.FindName(L"testButton").as<wuxc::Button>();
 	m_xaml_button.Height(50);
@@ -87,21 +98,27 @@ bool main_window::on_create(const CREATESTRUCTW &)
 	m_xaml_button.HorizontalAlignment(wux::HorizontalAlignment::Left);
 	m_xaml_button.VerticalAlignment(wux::VerticalAlignment::Top);
 
+	//Creates the xaml source from the control loaded.
 	m_xaml_button_handle = create_desktop_window_xaml_source(WS_TABSTOP, m_canvas);
+	//Hooks up the Click event to the xaml button.
 	m_xaml_button_click_revoker = m_xaml_button.Click(winrt::auto_revoke, [](wf::IInspectable const &sender, wux::RoutedEventArgs const &) {
 		static int click_count = 0;
 		++click_count;
 		auto s = std::format(L"Click Count: {}", click_count);
 		sender.as<wuxc::Button>().Content(winrt::box_value(s.c_str()));
 		});
+	//Shows the xaml content window.
 	ShowWindow(m_xaml_button_handle, SW_SHOW);
 
+	//Creates another Windows API.
+	//This button is also used to illustrate the control navigation.
 	m_native_button2.reset(CreateWindowExW(0, L"Button", L"Test Button 2", WS_TABSTOP | WS_CHILD | BS_PUSHBUTTON | BS_NOTIFY | WS_VISIBLE, 0, 0, 150, 50, get_handle(), reinterpret_cast<HMENU>(102), m_instance, nullptr));
 
 	return true;
 }
 void main_window::on_destroy()
 {
+	//Clears and revokes all xaml content.
 	clear_xaml_islands();
 	m_xaml_button_click_revoker.revoke();
 	m_xaml_button = nullptr;
@@ -110,6 +127,9 @@ void main_window::on_destroy()
 }
 void main_window::on_size(UINT, int, int)
 {
+	//Position the controls.
+	//All sizes and positions are in virtual pixels, to agree with how xaml works.
+	//This means that the pixels are scaled by the window DPI.
 	if (m_native_button1)
 	{
 		//The button is 50 vpx tall and 150 vpx wide
@@ -134,11 +154,16 @@ void main_window::on_size(UINT, int, int)
 		SetWindowPos(m_native_button2.get(), nullptr, static_cast<int>(320 * m_window_dpi_scale), 0, static_cast<int>(150 * m_window_dpi_scale), static_cast<int>(50 * m_window_dpi_scale), SWP_NOZORDER);
 	}
 }
+
+//Fills in the DPI information.
+//This assumes that 96 DPI is the base/100% scale.
 void main_window::initialise_dpi()
 {
 	m_window_dpi = GetDpiForWindow(get_handle());
 	m_window_dpi_scale = m_window_dpi / 96.f;
 }
+
+//Window class registration functions.
 bool main_window::check_class_registered()
 {
 	WNDCLASSEXW wcx{ sizeof(WNDCLASSEXW) };
