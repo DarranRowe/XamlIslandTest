@@ -1,4 +1,5 @@
 #include <string>
+#include <mutex>
 #include <cinttypes>
 #include <Windows.h>
 #include <strsafe.h>
